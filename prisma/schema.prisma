@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  username    String   @db.VarChar(100)
+  email       String   @unique 
+  password    String 
+  created_at  DateTime @default(now()) 
+  rule_name   String
+  rule        Rule     @relation(fields: [rule_name], references: [rule_name])
+
+  // Адреса, созданные пользователем
+  created_address ListAddress[]
+
+  @@map("users")
+}
+
+model Rule {
+  rule_name String   @id @db.VarChar(55)
+  users     User[]
+
+  @@map("rules")
+}
+
+// Таблица адресов
+model ListAddress {
+  id         Int       @id @default(autoincrement())
+  address    String    @db.VarChar(255) @unique // текстовый адрес
+  ip_address String?   @db.VarChar(45)          // может быть null
+
+  // создатель адреса (внешний ключ на User)
+  created_by   User?   @relation(fields: [createdById], references: [id])
+  createdById  Int?    
+
+  // подъезды по этому адресу
+  entrances    Entrance[]
+
+  @@map("list_address")
+}
+
+// Подъезды
+model Entrance {
+  id         Int       @id @default(autoincrement())
+  name_entrance String @db.VarChar(100)
+  port       Int
+
+
+  password       DevicePassword? @relation(fields: [passwordId], references: [id])
+  passwordId     Int?
+
+  address       ListAddress @relation(fields: [addressId], references: [id])
+  addressId     Int
+
+  @@map("entrances")
+  @@unique([addressId, name_entrance])
+}
+
+// Пароли устройств
+model DevicePassword {
+  id                  Int       @id @default(autoincrement())
+  encrypted_password  String    @db.VarChar(100) @unique        
+
+  entrances           Entrance[]
+
+  @@map("device_passwords")
+}
