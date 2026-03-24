@@ -14,10 +14,12 @@
       Адреса не найдены
     </div>
     
+    <!-- Новая сетка 4 в ряд -->
     <div v-else class="addresses-grid">
       <div 
         v-for="address in addresses" 
         :key="address.id"
+        @click="openAddress(address.id)"
         class="address-card"
       >
         <div class="card-header">
@@ -41,7 +43,7 @@
               :key="entrance.id"
               class="entrance-btn"
               :title="entrance.password?.decrypted_password || 'Нет пароля'"
-              @click="openEntrance(entrance)"
+              @click="openEntrance(entrance.id)"
             >
               {{ entrance.name_entrance }} ({{ entrance.port }})
               <span v-if="entrance.password" class="password-badge">
@@ -94,7 +96,7 @@ const error = ref<string | null>(null)
 
 const fetchAddresses = async () => {
   try {
-    const response = await $fetch('/api/address/adresses') 
+    const response = await $fetch('/api/address/list') 
     addresses.value = response
   } catch (err) {
     error.value = 'Не удалось загрузить адреса'
@@ -103,11 +105,11 @@ const fetchAddresses = async () => {
     loading.value = false
   }
 }
-
-const openEntrance = (entrance: any) => {
-  console.log('Открыть подъезд:', entrance)
-  // Здесь можно navigateTo(`/entrance/${entrance.id}`) или модалка
-  alert(`Подъезд ${entrance.name_entrance}, порт ${entrance.port}, пароль: ${entrance.password?.decrypted_password}`)
+const openAddress = (addressId: number) => {
+  navigateTo(`/address/${addressId}`)
+}
+const openEntrance = (entranceId: number) => {
+  navigateTo(`/address/entrance/${entranceId}`)
 }
 
 const editAddress = (id: number) => {

@@ -11,10 +11,10 @@
         Назначить роль
       </NuxtLink>
 
-      <NuxtLink to="/add-address" class="btn btn-square">
+      <NuxtLink to="/address/add" class="btn btn-square">
         Добавить адрес
       </NuxtLink>
-      <NuxtLink to="/show-list-addresses" class="btn btn-square">
+      <NuxtLink to="/address/list" class="btn btn-square">
         Список адресов
       </NuxtLink>
     </div>

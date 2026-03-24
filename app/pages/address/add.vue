@@ -216,7 +216,7 @@ const submitForm = async () => {
   }
   
   try {
-    await $fetch('/api/address/add-address', {  
+    await $fetch('/api/address/add', {  
       method: 'POST',
       body: payload
     })

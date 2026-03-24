@@ -11,8 +11,8 @@
 
       <!-- Не авторизован -->
       <div v-else class="auth-section">
-        <NuxtLink to="/login" class="btn-login">Войти</NuxtLink>
-        <NuxtLink to="/register" class="btn-register">Регистрация</NuxtLink>
+        <NuxtLink to="/auth/login" class="btn-login">Войти</NuxtLink>
+        <NuxtLink to="/auth/register" class="btn-register">Регистрация</NuxtLink>
       </div>
     </div>
   </header>
