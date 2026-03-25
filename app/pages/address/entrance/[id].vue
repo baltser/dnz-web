@@ -22,25 +22,35 @@
       >
         {{ loadingLog ? '⏳ Загрузка...' : '📋 Получить лог панели' }}
       </button>
-
-      <div v-if="logResult" class="log-result">
-        <button @click="logResult = null" class="close-log">×</button>
-        <pre>{{ logResult }}</pre>
-      </div>
     </main>
+
+    <!-- Модалка с логом -->
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal-content" @click.stop>
+        <button class="modal-close" @click="closeModal">×</button>
+        <pre class="modal-pre">{{ modalText }}</pre>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 interface Entrance {
   id: number
   name_entrance: string
   port: number
-  address: { address: string; ip_address: string }
-  password?: { decrypted_password: string }
+  password?: {
+    id: number
+    decrypted_password: string
+  } | null
+  address: {
+    id: number
+    address: string
+    ip_address?: string | null
+  }
 }
 
 interface ApiResponse {
@@ -55,8 +65,24 @@ const router = useRouter()
 const entrance = ref<Entrance | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
+
 const loadingLog = ref(false)
-const logResult = ref<string | null>(null)
+
+// состояние модалки
+const isModalOpen = ref(false)
+const modalText = ref('')
+
+const showModal = computed(() => isModalOpen.value && !!modalText.value)
+
+const openModal = (text: string) => {
+  modalText.value = text
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  modalText.value = ''
+}
 
 const fetchEntrance = async (id: string) => {
   try {
@@ -72,17 +98,16 @@ const fetchEntrance = async (id: string) => {
 const fetchLog = async () => {
   if (!entrance.value) return
   loadingLog.value = true
-  logResult.value = null
-  
+
   try {
     const result = await $fetch<ApiResponse>(`/api/address/entrance/${entrance.value.id}/log0.asp`)
     if (result.success) {
-      logResult.value = result.raw
+      openModal(result.raw)
     } else {
-      logResult.value = `Ошибка: ${result.error}`
+      openModal(`Ошибка: ${result.error}`)
     }
   } catch (err: any) {
-    logResult.value = `Ошибка запроса: ${err.message}`
+    openModal(`Ошибка запроса: ${err?.message || 'Неизвестная ошибка'}`)
   } finally {
     loadingLog.value = false
   }
@@ -190,48 +215,61 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-.log-result {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  position: relative;
-  margin-top: 2rem;
+/* Модалка */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
-.close-log {
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 600px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.modal-close {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: #666;
-  color: white;
+  background: none;
   border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  font-size: 1.5rem;
   cursor: pointer;
-  font-size: 1.2rem;
+  color: #666;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.close-log:hover {
-  background: #d32f2f;
+.modal-close:hover {
+  background: #f0f0f0;
+  color: #000;
 }
 
-.log-result pre {
+.modal-pre {
   margin: 0;
-  padding: 2rem 1.5rem 1.5rem;
+  padding: 2rem;
+  max-height: 70vh;
+  overflow-y: auto;
   background: #1a1a1a;
   color: #00ff88;
   font-family: 'Courier New', monospace;
   font-size: 0.95rem;
-  max-height: 500px;
-  overflow-y: auto;
-  border-radius: 12px;
   white-space: pre-wrap;
-  line-height: 1.5;
-}
-
-@media (max-width: 600px) {
-  .main { margin: 1rem auto; padding: 0 1rem; }
-  .address { padding: 1.5rem; }
 }
 </style>
